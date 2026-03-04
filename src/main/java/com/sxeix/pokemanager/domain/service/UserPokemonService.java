@@ -40,6 +40,7 @@ public class UserPokemonService {
 
         idempotencyService.complete(addPokemonRequest.getIdempotencyKey());
 
+        // TODO: outbox event?
         applicationEventPublisher.publishEvent(new PokemonFetchRequest(addPokemonRequest.getUserId(), addPokemonRequest.getPokemonNum(), addPokemonRequest.getIdempotencyKey()));
     }
 
