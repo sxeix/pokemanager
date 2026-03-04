@@ -1,0 +1,14 @@
+info:
+  name: get_user
+  type: grpc
+  seq: 1
+
+grpc:
+  url: localhost:9090
+  method: /UserService/GetUser
+  methodType: unary
+  message: |-
+    {
+      "id":1
+    }
+  auth: inherit

@@ -1,0 +1,16 @@
+info:
+  name: add_pokemon
+  type: grpc
+  seq: 3
+
+grpc:
+  url: localhost:9090
+  method: /PokemonService/AddPokemon
+  methodType: unary
+  message: |-
+    {
+      "idempotency_key":"cbf6b4f7-f050-45f0-aac2-a0cdd5dd5707",
+      "user_id":1,
+      "pokemon_num":9
+    }
+  auth: inherit

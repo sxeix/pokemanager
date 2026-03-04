@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option java_package = "com.sxeix.pokemanager";
+option java_multiple_files = true;
+
+message CreateUserRequest {
+  string idempotency_key = 1;
+  string username = 2;
+  string email = 3;
+}
+message CreateUserResponse {
+  int32 id = 1;
+}
+
+message GetUserRequest {
+  int32 id = 1;
+}
+message GetUserResponse {
+  int32 id = 1;
+  string username = 2;
+  string email = 3;
+}
+
+service UserService {
+  rpc GetUser (GetUserRequest) returns (GetUserResponse);
+  rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
+}

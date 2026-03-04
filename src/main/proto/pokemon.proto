@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option java_package = "com.sxeix.pokemanager";
+option java_multiple_files = true;
+
+message AddPokemonRequest {
+  string idempotency_key = 1;
+  int32 user_id = 2;
+  int32 pokemon_num = 3;
+}
+
+message AddPokemonResponse {
+}
+
+service PokemonService {
+  rpc AddPokemon (AddPokemonRequest) returns (AddPokemonResponse);
+}

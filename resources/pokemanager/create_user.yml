@@ -1,0 +1,16 @@
+info:
+  name: create_user
+  type: grpc
+  seq: 2
+
+grpc:
+  url: localhost:9090
+  method: /UserService/CreateUser
+  methodType: unary
+  message: |-
+    {
+      "username":"james",
+      "email":"james@email.com",
+      "idempotency_key":"abf6b4f7-f050-45f0-aac2-a0cdd5dd5707"
+    }
+  auth: inherit
