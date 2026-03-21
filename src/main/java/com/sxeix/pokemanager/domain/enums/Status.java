@@ -1,7 +1,8 @@
 package com.sxeix.pokemanager.domain.enums;
 
 public enum Status {
-    STARTED,
+    PENDING,
+    PROCESSING,
     COMPLETED,
     FAILED
 }

@@ -1,4 +1,4 @@
-package com.sxeix.pokemanager.domain.model;
+package com.sxeix.pokemanager.infrastructure.persistence.model;
 
 import com.sxeix.pokemanager.domain.enums.Status;
 import jakarta.persistence.*;
@@ -9,40 +9,37 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_pokemon")
+@Table(name = "outbox_event")
 @Getter
 @Setter
 @NoArgsConstructor
-public class UserPokemon {
+public class OutboxEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "event_type", nullable = false)
+    private String eventType;
 
-    @Column(name = "pokemon_num", nullable = false)
-    private Integer pokemonNum;
+    @Column(name = "payload", nullable = false)
+    private String payload;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private Status status;
-
-//    @JdbcTypeCode(SqlTypes.JSON)
-//    @Column(columnDefinition = "jsonb")
-    @Column(name = "pokemon_details")
-    private String pokemonDetails;
-
-    @Column(name = "failure_reason")
-    private String failureReason;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "locked_until", updatable = false)
+    private LocalDateTime lockedUntil = LocalDateTime.now();
+
+    @Column(name = "retry_attempts", nullable = false)
+    private int retryAttempts;
 
 }
