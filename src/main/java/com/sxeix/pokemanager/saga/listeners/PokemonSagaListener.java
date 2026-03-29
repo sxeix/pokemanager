@@ -1,6 +1,9 @@
 package com.sxeix.pokemanager.saga.listeners;
 
 import com.sxeix.pokemanager.domain.events.PokemonAddFetchEvent;
+import com.sxeix.pokemanager.domain.events.PokemonAddSaveErrorEvent;
+import com.sxeix.pokemanager.domain.events.PokemonAddSaveRequestEvent;
+import com.sxeix.pokemanager.domain.messaging.EventPublisher;
 import com.sxeix.pokemanager.domain.service.UserPokemonService;
 import com.sxeix.pokemanager.infrastructure.pokeapi.PokeApiClient;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +18,7 @@ public class PokemonSagaListener {
 
     private final PokeApiClient pokeApiClient;
     private final UserPokemonService userPokemonService;
+    private final EventPublisher eventPublisher;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -22,9 +26,40 @@ public class PokemonSagaListener {
         var pokemonData = pokeApiClient.fetchData(pokemonAddFetchEvent.pokemonNum());
 
         if (pokemonData.isPresent()) {
-            // publish save event request
+            eventPublisher.publish(new PokemonAddSaveRequestEvent(
+                    pokemonAddFetchEvent.userId(),
+                    pokemonAddFetchEvent.userPokemonId(),
+                    pokemonAddFetchEvent.pokemonNum(),
+                    pokemonData.get(),
+                    pokemonAddFetchEvent.idempotencyKey()
+            ));
         } else {
-            // publish save error request
+            eventPublisher.publish(new PokemonAddSaveErrorEvent(
+                    pokemonAddFetchEvent.userId(),
+                    pokemonAddFetchEvent.userPokemonId(),
+                    pokemonAddFetchEvent.pokemonNum(),
+                    "Pokemon details could not be fetched from API",
+                    pokemonAddFetchEvent.idempotencyKey()
+            ));
         }
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onPokemonSaveRequest(final PokemonAddSaveRequestEvent pokemonAddSaveRequestEvent) {
+        userPokemonService.markSaving(pokemonAddSaveRequestEvent.userPokemonId());
+        userPokemonService.updatePokemonDetails(
+                pokemonAddSaveRequestEvent.userPokemonId(),
+                pokemonAddSaveRequestEvent.pokemonDetails()
+        );
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onPokemonSaveError(final PokemonAddSaveErrorEvent pokemonAddSaveErrorEvent) {
+        userPokemonService.markFailed(
+                pokemonAddSaveErrorEvent.userPokemonId(),
+                pokemonAddSaveErrorEvent.failureReason()
+        );
     }
 }

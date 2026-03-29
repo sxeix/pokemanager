@@ -52,7 +52,26 @@ public class UserPokemonService {
     public void updatePokemonDetails(final Integer userPokemonId, final String pokemonDetails) {
         userPokemonRepository.findById(userPokemonId).map(userPokemon -> {
             userPokemon.setPokemonDetails(pokemonDetails);
+            userPokemon.setStatus(Status.COMPLETED);
+            userPokemon.setFailureReason(null);
             return userPokemonRepository.save(userPokemon);
+        });
+    }
+
+    @Transactional
+    public void markSaving(final Integer userPokemonId) {
+        userPokemonRepository.findById(userPokemonId).ifPresent(userPokemon -> {
+            userPokemon.setStatus(Status.SAVING);
+            userPokemonRepository.save(userPokemon);
+        });
+    }
+
+    @Transactional
+    public void markFailed(final Integer userPokemonId, final String failureReason) {
+        userPokemonRepository.findById(userPokemonId).ifPresent(userPokemon -> {
+            userPokemon.setStatus(Status.FAILED);
+            userPokemon.setFailureReason(failureReason);
+            userPokemonRepository.save(userPokemon);
         });
     }
 
