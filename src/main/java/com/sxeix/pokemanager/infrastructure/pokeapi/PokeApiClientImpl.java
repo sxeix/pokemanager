@@ -1,5 +1,6 @@
 package com.sxeix.pokemanager.infrastructure.pokeapi;
 
+import com.google.gson.Gson;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.Optional;
 public class PokeApiClientImpl implements PokeApiClient {
 
     private static final String BASE_URL = "https://pokeapi.co/api/v2/%s";
+    private final Gson gson = new Gson();
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(20))
@@ -37,7 +39,13 @@ public class PokeApiClientImpl implements PokeApiClient {
             var response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                return Optional.ofNullable(response.body());
+                var pokemonResponse = gson.fromJson(response.body(), PokeApiPokemonResponse.class); // ignore this cheap hack just to avoid storing the entire payload
+
+                if (pokemonResponse == null || pokemonResponse.name() == null || pokemonResponse.name().isBlank()) {
+                    return Optional.empty();
+                }
+
+                return Optional.of(gson.toJson(pokemonResponse));
             }
 
             if (response.statusCode() == 429 || response.statusCode() >= 500) {
@@ -57,5 +65,6 @@ public class PokeApiClientImpl implements PokeApiClient {
         return Optional.empty();
     }
 
+    private record PokeApiPokemonResponse(String name) {}
 
 }
