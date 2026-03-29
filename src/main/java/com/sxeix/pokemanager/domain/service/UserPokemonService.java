@@ -3,6 +3,7 @@ package com.sxeix.pokemanager.domain.service;
 import com.sxeix.pokemanager.AddPokemonRequest;
 import com.sxeix.pokemanager.domain.enums.Status;
 import com.sxeix.pokemanager.domain.events.PokemonAddFetchEvent;
+import com.sxeix.pokemanager.domain.exception.TeamFullException;
 import com.sxeix.pokemanager.domain.exception.UserNotFoundException;
 import com.sxeix.pokemanager.domain.model.UserPokemon;
 import com.sxeix.pokemanager.domain.messaging.EventPublisher;
@@ -15,13 +16,15 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserPokemonService {
 
+    private static final int MAX_POKEMON_PER_USER = 6;
+
     private final UserService userService;
     private final UserPokemonRepository userPokemonRepository;
     private final IdempotencyService idempotencyService;
     private final EventPublisher eventPublisher;
 
     @Transactional
-    public void initiateAddPokemon(final AddPokemonRequest addPokemonRequest) throws UserNotFoundException { // TODO remove grpc stuff from touching anything in the domain
+    public void initiateAddPokemon(final AddPokemonRequest addPokemonRequest) throws UserNotFoundException, TeamFullException { // TODO remove grpc stuff from touching anything in the domain
 
         if (userService.findUserById(addPokemonRequest.getUserId()).isEmpty()) {
             throw new UserNotFoundException("User id %s does not exist".formatted(addPokemonRequest.getUserId()));
@@ -29,7 +32,9 @@ public class UserPokemonService {
 
         var userReference = userService.getReferenceById(addPokemonRequest.getUserId());
 
-        // TODO: add check to ensure no more than 6 pokemon
+        if (userPokemonRepository.countNonFailedByUserId(addPokemonRequest.getUserId()) >= MAX_POKEMON_PER_USER) {
+            throw new TeamFullException("User already has the maximum of %s Pokemon".formatted(MAX_POKEMON_PER_USER));
+        }
 
         var userPokemon = new UserPokemon();
         userPokemon.setUser(userReference);

@@ -4,6 +4,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.sxeix.pokemanager.AddPokemonRequest;
 import com.sxeix.pokemanager.AddPokemonResponse;
 import com.sxeix.pokemanager.PokemonServiceGrpc;
+import com.sxeix.pokemanager.domain.exception.TeamFullException;
 import com.sxeix.pokemanager.domain.service.IdempotencyService;
 import com.sxeix.pokemanager.domain.service.UserPokemonService;
 import io.grpc.Status;
@@ -44,6 +45,9 @@ public class PokemonGrpcService extends PokemonServiceGrpc.PokemonServiceImplBas
             AddPokemonResponse response = AddPokemonResponse.newBuilder().build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
+        } catch (TeamFullException e) {
+            idempotencyService.fail(idempotencyKey);
+            responseObserver.onError(Status.FAILED_PRECONDITION.withDescription(e.getMessage()).asException());
         } catch (Exception e) {
             idempotencyService.fail(idempotencyKey);
             responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asException());

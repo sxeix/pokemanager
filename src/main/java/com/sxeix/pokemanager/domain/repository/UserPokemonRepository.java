@@ -10,4 +10,6 @@ public interface UserPokemonRepository {
 
     UserPokemon save(UserPokemon userPokemon);
 
+    long countNonFailedByUserId(Integer userId);
+
 }
